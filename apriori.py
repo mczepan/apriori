@@ -12,7 +12,7 @@ def binaryzacja(X):
                 X[i][j] = 1
     return X
 
-def supp_laczone(*args):
+def supp_laczone(args):
     s = 0
     for i in range(len(args[0])):
         row = []
@@ -33,11 +33,29 @@ def supp(A):
         return s
 
 def zbiory_czeste(A,minSupp):
+    zbiory = []
     for i in range(len(A)-1,-1,-1):
+        zbior_nazwa = ''
+        zbior = []
         print('A'+str(i+1),A[i])
+        
         if supp(A[i])>minSupp:
-            print('asda')
-
+            zbior.append(A[i])
+            zbior_nazwa += 'A'+str(i+1)
+            zbiory.append(zbior_nazwa)
+            j = i+1
+            while(j<len(A)):            
+                print('while',zbior)
+                
+                if supp_laczone([zbior,A[j]])>minSupp:
+                    zbior.append(A[j])
+                    zbior_nazwa += 'A'+str(j+1)
+                    zbiory.append(zbior_nazwa)
+                    j+=1
+                else:
+                    break
+                    
+    print(zbiory)
 
 
 A1 = [0, 1, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 0]
@@ -52,5 +70,5 @@ zbiory_czeste(A,6)
 
 #print(A)
 #print(supp(A))
-print(supp_laczone(A3,A4))
+print(supp_laczone([A2,A3]))
 
