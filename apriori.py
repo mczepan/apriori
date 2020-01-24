@@ -9,7 +9,7 @@ Created on Thu Jan  9 08:37:05 2020
 import itertools
 import matplotlib.pyplot as plt
 import scipy.io as sio
-
+import time
 
 def binaryzacja(X):
     for i in range(0,len(X)):
@@ -121,13 +121,14 @@ def wykres(dane,maxX):
 def brzeg_pareto(dane):
     brzeg = dict()    
     maxWsparcie = max(dane[0])    
-    dane = przetworz_dane(dane)    
-    m = 0    
+    dane = przetworz_dane(dane)  
+    m = 0
+    
     for i in range(maxWsparcie,0,-1):        
         if i in dane.keys() and dane[i]>m:
             brzeg[i] = dane[i]
-            m = dane[i]    
-    plt.plot(list(brzeg.keys()),list(brzeg.values()),'r.')
+            m = dane[i]
+    plt.plot(list(brzeg.keys()),list(brzeg.values()),'r.')    
     keys = list(brzeg.keys())    
     for i, k  in enumerate(keys):         
         if i == 0:
@@ -139,6 +140,7 @@ def brzeg_pareto(dane):
             # plt.plot([k,keys[i+1]],[brzeg[keys[i]],brzeg[keys[i+1]]],':r')
             plt.plot([keys[i+1],k],[brzeg[keys[i]],brzeg[keys[i]]],':r')
             plt.plot([keys[i+1],keys[i+1]],[brzeg[keys[i]],brzeg[keys[i+1]]],':r')
+    return brzeg
                 
 def przetworz_dane(dane):    
     wynik = dict.fromkeys(dane[0],0)    
@@ -147,22 +149,33 @@ def przetworz_dane(dane):
             wynik[dane[0][i]] = dane[1][i]
     return wynik
 
+
 def apriori(dane,minWsparcie,minZaufanie):
-    [zbiory,wsparcie] = wyznacz_zbiory(dane,minWsparcie)
+    start = time.time()
+    [zbiory,wsparcie] = wyznacz_zbiory(dane,minWsparcie)    
     reguly = wyznaczanie_regul(zbiory)
     # print('Reguly:\n ',reguly)
-    zauf = zaufanie(reguly,wsparcie)
-    print(zauf)
+    zauf = zaufanie(reguly,wsparcie)    
     ostateczne_reguly = list(minimalne_zaufanie(zauf,minZaufanie))
     print(' ================ OSTATECZNE REGULY ================')
     for r in ostateczne_reguly:
         print_regula(r[0],r[1])
-        print('Zaufanie: ',round(zauf[r],4))
+        print('Zaufanie:',round(zauf[r],4))
+        print('Wsparcie: ',round(wsparcie[r[1]]))
     #wykres
     dane_wykres = dane_do_wykresu(ostateczne_reguly,wsparcie,zauf)
     wykres(dane_wykres,max(wsparcie.values()))
-    brzeg_pareto(dane_wykres)
+    brzeg = brzeg_pareto(dane_wykres)
+    print(' ================ REGULY NA BRZEGU ================')    
+    for k,v in zauf.items():
+        for b in brzeg:
+            if v == brzeg[b]:
+                print_regula(k[0], k[1])
+                print('Zaufanie: ',brzeg[b])
+                print('Wsparcie: ',b)
     plt.show()
+    print('================ CZAS ================')
+    print("Czas wykonywania: ",round(time.time()-start,2),' s')
     
 """ Przyklad z pdf
 #A1 = [0, 1, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 0]
@@ -177,5 +190,5 @@ def apriori(dane,minWsparcie,minZaufanie):
 
 
 reuters = sio.loadmat('reuters.mat')
-reuters = reuters['TOPICS'][:,70:80]
+reuters = reuters['TOPICS'][:,70:90]
 apriori(reuters,5,0.000000001)
