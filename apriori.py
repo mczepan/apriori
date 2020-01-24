@@ -5,10 +5,11 @@ Created on Thu Jan  9 08:37:05 2020
 @author: Mario
 """
 
+
 import itertools
 import matplotlib.pyplot as plt
 import scipy.io as sio
-import numpy as np
+
 
 def binaryzacja(X):
     for i in range(0,len(X)):
@@ -28,10 +29,14 @@ def supp(args,dane):
     return s
 
 def wyznaczanie_regul(zbiory_czeste):
+    # print('Otrzymalem zbiory: ',zbiory_czeste)
     reguly = list()
+    print('================ RULES ================')
     for zbior in zbiory_czeste:
-        for zbiory in zbiory_czeste:            
+        for zbiory in zbiory_czeste:  
+            # print(zbior,zbiory)
             if zbior_w_zbiorze(zbior,zbiory):
+            
                 print_regula(zbior,zbiory)
                 reguly.append( (zbior,zbiory ))
     return reguly
@@ -47,22 +52,53 @@ def print_regula(zbior1,zbior2):
     s = s[:-1] + '}'
     print(s)
 
-
 def zbior_w_zbiorze(zbior1,zbior2):
-    if zbior1 == zbior2:
+    # print('Zbior 1: ',zbior1,' Zbior 2:',zbior2)
+    if zbior1 == zbior2 or type(zbior1)==int:
+        # print('Zwracam false')
         return False
     for i in zbior1:
         if i not in zbior2:
+            # print('Zwracam false')
             return False
     return True
 
-
 def zbiory_czeste(wsparcie,minSupp):    
-    return filter(lambda x: wsparcie[x]>minSupp,wsparcie)
-    
-    
+    return filter(lambda x: wsparcie[x]>=minSupp,wsparcie)
+      
 def podzbiory(klucze,i):
     return itertools.combinations(klucze,i)
+
+def wyznacz_zbiory(dane,minWsparcie):
+    zbiory = []
+    wsparcie = dict()
+    keys = list(range(1,dane.shape[1]+1))
+    for i in range(1,dane.shape[1]+1):
+        if i > 2:
+            break
+        pdzbiory = podzbiory(dict.fromkeys(keys),i)    
+        wsp = dict.fromkeys(pdzbiory,0)        
+        for k in wsp.keys():
+            wsp[k] = supp(k,dane)
+            
+        # print('Wsp przed del:\n',wsp)
+        for k in wsp.copy().keys():
+            # print('Element key: ',k,' value: ',wsp[k])
+            if wsp[k] < minWsparcie:
+                del wsp[k]
+        # print('Wsp:\n ',wsp)
+        wsparcie.update(wsp)
+        # print('Wsparcie:\n ',wsparcie)
+        zb = list(zbiory_czeste(wsparcie,minWsparcie))
+        for z in zb:
+            if z not in zbiory:
+                zbiory.append(z)
+            
+        # print('Zb:\n ',zb)
+        keys = list(dict.fromkeys(list(itertools.chain(*zb))))
+        # print('Zbiory:\n ',zbiory)        
+        # print('Keys:\n ',keys)    
+    return [zbiory,wsparcie]
 
 def zaufanie(reguly,wsparcie):
     zauf = dict()    
@@ -86,27 +122,31 @@ def wykres(dane,maxX):
     plt.xlim(left=0,right=maxX)
     plt.ylim(bottom=0,top=1)
     
-
 def brzeg_pareto(dane):
-    brzeg = dict()
-    print(dane)
+    brzeg = dict()    
     maxWsparcie = max(dane[0])    
     dane = przetworz_dane(dane)    
     m = 0    
     for i in range(maxWsparcie,0,-1):        
         if i in dane.keys() and dane[i]>m:
             brzeg[i] = dane[i]
-            m = dane[i]    
+            m = dane[i]
+    print(brzeg)
     plt.plot(list(brzeg.keys()),list(brzeg.values()),'r.')
-    keys = brzeg.keys()    
-    for i, k  in enumerate(keys):        
+    keys = list(brzeg.keys())
+    print(keys)
+    for i, k  in enumerate(keys): 
+        print(i,k,brzeg[k])
         if i == 0:
             plt.plot([k,k],[0,brzeg[k]],':r')
         if i == len(brzeg.items())-1:
             plt.plot([k,0],[brzeg[k],brzeg[k]],':r')
-        elif i>0 and i+1<len(brzeg.items()):
-            plt.plot([k,keys[i+1]],[brzeg[keys[i]],brzeg[keys[i+1]]],':r')
-    
+        if i<len(brzeg.items())-1:
+            # plt.plot([k,keys[i+1]],[brzeg[keys[i]],brzeg[keys[i+1]]],':r')
+            # plt.plot([k,keys[i+1]],[brzeg[keys[i]],brzeg[keys[i+1]]],':r')
+            plt.plot([keys[i+1],k],[brzeg[keys[i]],brzeg[keys[i]]],':r')
+            plt.plot([keys[i+1],keys[i+1]],[brzeg[keys[i]],brzeg[keys[i+1]]],':r')
+                
 def przetworz_dane(dane):    
     wynik = dict.fromkeys(dane[0],0)    
     for i in range(len(dane[0])):        
@@ -115,29 +155,12 @@ def przetworz_dane(dane):
     return wynik
 
 def apriori(dane,minWsparcie,minZaufanie):
-    zbiory = []
-    wsparcie = dict()
-    keys = list(range(1,dane.shape[1]+1))
-    for i in range(1,dane.shape[1]+1):
-        pdzbiory = podzbiory(dict.fromkeys(keys),i)    
-        wsp = dict.fromkeys(pdzbiory,0)
-        
-        for k in wsparcie:
-            wsp[k] = supp(k,dane)
-        print(wsp)
-        wsparcie.update(wsp)
-        zb = list(zbiory_czeste(wsparcie,minWsparcie))
-        if zb != []:
-            zbiory.append(zb)
-        print(zbiory)
-        keys = zbiory
-        print(keys)
-    zbiory = list(itertools.chain(*zbiory))
+    [zbiory,wsparcie] = wyznacz_zbiory(dane,minWsparcie)
     reguly = wyznaczanie_regul(zbiory)
-    print(reguly)
+    # print('Reguly:\n ',reguly)
     zauf = zaufanie(reguly,wsparcie)
     ostateczne_reguly = list(minimalne_zaufanie(zauf,minZaufanie))
-    print(ostateczne_reguly)
+    # print('Ostateczne reguly:\n ',ostateczne_reguly)
     #wykres
     dane_wykres = dane_do_wykresu(ostateczne_reguly,wsparcie,zauf)
 
@@ -145,7 +168,7 @@ def apriori(dane,minWsparcie,minZaufanie):
     brzeg_pareto(dane_wykres)
     plt.show()
     
-
+""" Przyklad z pdf
 #A1 = [0, 1, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 0]
 #A2 = [1, 1, 0, 1, 1, 0, 0, 0, 0, 0, 1, 0, 1, 1, 1, 1, 0, 1, 0, 0]
 #A3 = [1, 0, 0, 1, 0, 0, 1, 1, 1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1, 1]
@@ -153,24 +176,10 @@ def apriori(dane,minWsparcie,minZaufanie):
 #A = [A1,A2,A3,A4]
 #A = np.transpose(np.array(A))
 #apriori(A,6,0.5)
+"""
 
-#reuters = sio.loadmat('reuters.mat')
-#reuters = reuters['TOPICS'][:,:25]
-#
-##podzbiory()
-#apriori(reuters,1,0.6)
 
 
 reuters = sio.loadmat('reuters.mat')
-reuters = reuters['TOPICS']#[:,:2]
-#
-##print(A)
-##print(supp(A))
-#x = []
-##for i in range(1,3):
-##    x = list(itertools.combinations(list(range(1,reuters.shape[1])),i))
-##klucze = dict.fromkeys(list(range(1,reuters.shape[1]+1)))
-##x = itertools.combinations(klucze.keys(),2)
-##print(list(x))
-apriori(reuters,1,0.000000001)
-
+reuters = reuters['TOPICS'][:,60:80]
+apriori(reuters,5,0.000000001)
