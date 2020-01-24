@@ -31,12 +31,11 @@ def supp(args,dane):
 def wyznaczanie_regul(zbiory_czeste):
     # print('Otrzymalem zbiory: ',zbiory_czeste)
     reguly = list()
-    print('================ RULES ================')
+    print('================ OTRZYMANE REGULY ================')
     for zbior in zbiory_czeste:
         for zbiory in zbiory_czeste:  
-            # print(zbior,zbiory)
-            if zbior_w_zbiorze(zbior,zbiory):
             
+            if zbior_w_zbiorze(zbior,zbiory):            
                 print_regula(zbior,zbiory)
                 reguly.append( (zbior,zbiory ))
     return reguly
@@ -52,14 +51,11 @@ def print_regula(zbior1,zbior2):
     s = s[:-1] + '}'
     print(s)
 
-def zbior_w_zbiorze(zbior1,zbior2):
-    # print('Zbior 1: ',zbior1,' Zbior 2:',zbior2)
-    if zbior1 == zbior2 or type(zbior1)==int:
-        # print('Zwracam false')
+def zbior_w_zbiorze(zbior1,zbior2):    
+    if zbior1 == zbior2 or type(zbior1)==int:        
         return False
     for i in zbior1:
-        if i not in zbior2:
-            # print('Zwracam false')
+        if i not in zbior2:            
             return False
     return True
 
@@ -130,13 +126,10 @@ def brzeg_pareto(dane):
     for i in range(maxWsparcie,0,-1):        
         if i in dane.keys() and dane[i]>m:
             brzeg[i] = dane[i]
-            m = dane[i]
-    print(brzeg)
+            m = dane[i]    
     plt.plot(list(brzeg.keys()),list(brzeg.values()),'r.')
-    keys = list(brzeg.keys())
-    print(keys)
-    for i, k  in enumerate(keys): 
-        print(i,k,brzeg[k])
+    keys = list(brzeg.keys())    
+    for i, k  in enumerate(keys):         
         if i == 0:
             plt.plot([k,k],[0,brzeg[k]],':r')
         if i == len(brzeg.items())-1:
@@ -159,11 +152,14 @@ def apriori(dane,minWsparcie,minZaufanie):
     reguly = wyznaczanie_regul(zbiory)
     # print('Reguly:\n ',reguly)
     zauf = zaufanie(reguly,wsparcie)
+    print(zauf)
     ostateczne_reguly = list(minimalne_zaufanie(zauf,minZaufanie))
-    # print('Ostateczne reguly:\n ',ostateczne_reguly)
+    print(' ================ OSTATECZNE REGULY ================')
+    for r in ostateczne_reguly:
+        print_regula(r[0],r[1])
+        print('Zaufanie: ',round(zauf[r],4))
     #wykres
     dane_wykres = dane_do_wykresu(ostateczne_reguly,wsparcie,zauf)
-
     wykres(dane_wykres,max(wsparcie.values()))
     brzeg_pareto(dane_wykres)
     plt.show()
@@ -181,5 +177,5 @@ def apriori(dane,minWsparcie,minZaufanie):
 
 
 reuters = sio.loadmat('reuters.mat')
-reuters = reuters['TOPICS'][:,60:80]
+reuters = reuters['TOPICS'][:,70:80]
 apriori(reuters,5,0.000000001)
