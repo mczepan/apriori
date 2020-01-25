@@ -31,7 +31,7 @@ def supp(args,dane):
 def wyznaczanie_regul(zbiory_czeste):
     # print('Otrzymalem zbiory: ',zbiory_czeste)
     reguly = list()
-    print('================ OTRZYMANE REGULY ================')
+    print('================ MOZLIWE REGULY ================')
     for zbior in zbiory_czeste:
         for zbiory in zbiory_czeste:  
             
@@ -70,8 +70,7 @@ def wyznacz_zbiory(dane,minWsparcie):
     wsparcie = dict()
     keys = list(range(1,dane.shape[1]+1))
     for i in range(1,dane.shape[1]+1):
-        if i > 2:
-            break
+        # print('====================',i,'====================')
         pdzbiory = podzbiory(dict.fromkeys(keys),i)    
         wsp = dict.fromkeys(pdzbiory,0)        
         for k in wsp.keys():
@@ -83,6 +82,11 @@ def wyznacz_zbiory(dane,minWsparcie):
             if wsp[k] < minWsparcie:
                 del wsp[k]
         # print('Wsp:\n ',wsp)
+        if wsp == {}:
+            print('BRAK PODZBIOROW O ROZMIARZE ',i,'O ZAUFANIU WIEKSZYM NIZ MINIMALNE \n'
+                  '=================== PRZERYWAM ===================\n')
+            
+            break
         wsparcie.update(wsp)
         # print('Wsparcie:\n ',wsparcie)
         zb = list(zbiory_czeste(wsparcie,minWsparcie))
@@ -116,14 +120,13 @@ def dane_do_wykresu(ostateczne_reguly,wsparcie,zaufanie):
 def wykres(dane,maxX):    
     plt.plot(dane[0],dane[1],'k.')
     plt.xlim(left=0,right=maxX)
-    plt.ylim(bottom=0,top=1)
+    plt.ylim(bottom=0,top=1.1)
     
 def brzeg_pareto(dane):
-    brzeg = dict()    
-    maxWsparcie = max(dane[0])    
-    dane = przetworz_dane(dane)  
-    m = 0
-    
+    brzeg = dict()         
+    dane = przetworz_dane(dane)      
+    maxWsparcie = max(dane.keys())   
+    m = 0    
     for i in range(maxWsparcie,0,-1):        
         if i in dane.keys() and dane[i]>m:
             brzeg[i] = dane[i]
@@ -136,8 +139,6 @@ def brzeg_pareto(dane):
         if i == len(brzeg.items())-1:
             plt.plot([k,0],[brzeg[k],brzeg[k]],':r')
         if i<len(brzeg.items())-1:
-            # plt.plot([k,keys[i+1]],[brzeg[keys[i]],brzeg[keys[i+1]]],':r')
-            # plt.plot([k,keys[i+1]],[brzeg[keys[i]],brzeg[keys[i+1]]],':r')
             plt.plot([keys[i+1],k],[brzeg[keys[i]],brzeg[keys[i]]],':r')
             plt.plot([keys[i+1],keys[i+1]],[brzeg[keys[i]],brzeg[keys[i+1]]],':r')
     return brzeg
@@ -164,7 +165,8 @@ def apriori(dane,minWsparcie,minZaufanie):
         print('Wsparcie: ',round(wsparcie[r[1]]))
     #wykres
     dane_wykres = dane_do_wykresu(ostateczne_reguly,wsparcie,zauf)
-    wykres(dane_wykres,max(wsparcie.values()))
+    
+    wykres(dane_wykres,1.1*max(dane_wykres[0]))
     brzeg = brzeg_pareto(dane_wykres)
     print(' ================ REGULY NA BRZEGU ================')    
     for k,v in zauf.items():
@@ -173,6 +175,7 @@ def apriori(dane,minWsparcie,minZaufanie):
                 print_regula(k[0], k[1])
                 print('Zaufanie: ',brzeg[b])
                 print('Wsparcie: ',b)
+    plt.title('Wykres dla zbioru z '+str(dane.shape[1])+' atrybutami dla:\n minimalnego wsparcia: '+str(minWsparcie)+' \n minimalnego zaufania: '+str(minZaufanie))
     plt.show()
     print('================ CZAS ================')
     print("Czas wykonywania: ",round(time.time()-start,2),' s')
@@ -190,5 +193,5 @@ def apriori(dane,minWsparcie,minZaufanie):
 
 
 reuters = sio.loadmat('reuters.mat')
-reuters = reuters['TOPICS'][:,70:90]
-apriori(reuters,5,0.000000001)
+reuters = reuters['TOPICS']#[:,70:80]
+apriori(reuters,3,0.1)
