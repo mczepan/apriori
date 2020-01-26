@@ -70,7 +70,7 @@ def wyznacz_zbiory(dane,minWsparcie):
     wsparcie = dict()
     keys = list(range(1,dane.shape[1]+1))
     for i in range(1,dane.shape[1]+1):
-        # print('====================',i,'====================')
+        print('====================',i,'====================')
         pdzbiory = podzbiory(dict.fromkeys(keys),i)    
         wsp = dict.fromkeys(pdzbiory,0)        
         for k in wsp.keys():
@@ -81,7 +81,7 @@ def wyznacz_zbiory(dane,minWsparcie):
             # print('Element key: ',k,' value: ',wsp[k])
             if wsp[k] < minWsparcie:
                 del wsp[k]
-        # print('Wsp:\n ',wsp)
+        print('Wsp:\n ',wsp)
         if wsp == {}:
             print('BRAK PODZBIOROW O ROZMIARZE ',i,'O ZAUFANIU WIEKSZYM NIZ MINIMALNE \n'
                   '=================== PRZERYWAM ===================\n')
@@ -97,7 +97,7 @@ def wyznacz_zbiory(dane,minWsparcie):
         # print('Zb:\n ',zb)
         keys = list(dict.fromkeys(list(itertools.chain(*zb))))
         # print('Zbiory:\n ',zbiory)        
-        # print('Keys:\n ',keys)    
+        print('Keys:\n ',keys)    
     return [zbiory,wsparcie]
 
 def zaufanie(reguly,wsparcie):
@@ -193,5 +193,5 @@ def apriori(dane,minWsparcie,minZaufanie):
 
 
 reuters = sio.loadmat('reuters.mat')
-reuters = reuters['TOPICS']#[:,70:80]
-apriori(reuters,3,0.1)
+reuters = reuters['TOPICS'][:1000,:]
+apriori(reuters,5,0.6)
