@@ -89,7 +89,7 @@ def wyznacz_zbiory(dane,minWsparcie):
             break
         wsparcie.update(wsp)
         # print('Wsparcie:\n ',wsparcie)
-        zb = list(zbiory_czeste(wsparcie,minWsparcie))
+        zb = list(zbiory_czeste(wsp,minWsparcie))
         for z in zb:
             if z not in zbiory:
                 zbiory.append(z)
@@ -175,10 +175,12 @@ def apriori(dane,minWsparcie,minZaufanie):
                 print_regula(k[0], k[1])
                 print('Zaufanie: ',brzeg[b])
                 print('Wsparcie: ',b)
+    
     plt.title('Wykres dla zbioru z '+str(dane.shape[1])+' atrybutami dla:\n minimalnego wsparcia: '+str(minWsparcie)+' \n minimalnego zaufania: '+str(minZaufanie))
     plt.show()
     print('================ CZAS ================')
     print("Czas wykonywania: ",round(time.time()-start,2),' s')
+    print("Ilosc zbiorow istotnych: ",len(ostateczne_reguly))
     
 """ Przyklad z pdf
 #A1 = [0, 1, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 0]
@@ -194,4 +196,4 @@ def apriori(dane,minWsparcie,minZaufanie):
 
 reuters = sio.loadmat('reuters.mat')
 reuters = reuters['TOPICS'][:1000,:]
-apriori(reuters,5,0.6)
+apriori(reuters,2,0.6)
